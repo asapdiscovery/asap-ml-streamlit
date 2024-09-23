@@ -1,2 +1,5 @@
 # ignore .streamlit folder
 .streamlit/
+
+# ignore oe_license.txt
+oe_license.txt
