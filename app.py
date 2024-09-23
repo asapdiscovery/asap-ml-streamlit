@@ -1,3 +1,18 @@
+def sort_out_openeye_license():
+    import os
+    # need to write the license file to disk
+    txt = st.st.secrets.openeye_credentials.license_file_txt
+    if not txt:
+        raise ValueError("No OpenEye license file found")
+    with open("oe_license.txt", "w") as f:
+        f.write(txt)
+    # set the license file environment variable
+    os.environ["OE_LICENSE"] = "oe_license.txt"
+
+sort_out_openeye_license()
+
+
+
 import streamlit as st
 import pandas as pd
 import numpy as np
@@ -36,6 +51,9 @@ def convert_df(df):
     # IMPORTANT: Cache the conversion to prevent computation on every rerun
     return df.to_csv().encode("utf-8")
 
+
+
+    
 
 # Set the title of the Streamlit app
 st.title('ASAPDiscovery Machine Learning')
