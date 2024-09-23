@@ -3,3 +3,6 @@
 
 # ignore oe_license.txt
 oe_license.txt
+
+# .env file
+.env
