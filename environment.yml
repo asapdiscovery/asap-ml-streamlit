@@ -1,4 +1,3 @@
-name: falcbot
 channels:
   - conda-forge
   - openeye
@@ -14,7 +13,7 @@ dependencies:
   - biopython
   - schedule
   - openeye-toolkits
-
+  - asapdiscovery
 
   # ml
   - pytorch
@@ -42,11 +41,6 @@ dependencies:
 
     # Pip-only installs
   - pip:
-    - git+https://github.com/choderalab/asapdiscovery@main#egg=asapdiscovery-alchemy&subdirectory=asapdiscovery-alchemy
-    - git+https://github.com/choderalab/asapdiscovery@main#egg=asapdiscovery-data&subdirectory=asapdiscovery-data
-    - git+https://github.com/choderalab/asapdiscovery@main#egg=asapdiscovery-modeling&subdirectory=asapdiscovery-modeling
-    - git+https://github.com/choderalab/asapdiscovery@main#egg=asapdiscovery-docking&subdirectory=asapdiscovery-docking
-    - git+https://github.com/choderalab/asapdiscovery@main#egg=asapdiscovery-ml&subdirectory=asapdiscovery-ml
     - streamlit-ketcher
 
 
