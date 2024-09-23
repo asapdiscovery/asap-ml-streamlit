@@ -1,10 +1,14 @@
 version: '3'
 
+volumes:
+  production_traefik: {}
+
 services:
-  falcbot:
+  streamlit:
     command: streamlit run app.py
     image: ${STREAMLIT_DOCKER_IMAGE:?err}
-    container_name: "asap-ml-streamlit"
+    container_name: streamlit_app
+    restart: always
     ports:
       - "8501:8501"
     healthcheck:
@@ -22,3 +26,16 @@ services:
         target: /home/mambauser/.streamlit/secrets.toml
     env_file:
       - .env
+  
+  traefik:
+    build:
+      context: .
+      dockerfile: ./Dockerfile.traefik
+    image: traefik_production
+    volumes:
+      - production_traefik:/etc/traefik/acme:z
+      - /var/run/docker.sock:/var/run/docker.sock
+
+    ports:
+      - "0.0.0.0:80:80"
+      - "0.0.0.0:443:443"
