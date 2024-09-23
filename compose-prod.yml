@@ -6,10 +6,11 @@ networks:
 
 
 services:
-  streamlit:
+  streamlit_service:
     command: streamlit run app.py
     image: ${STREAMLIT_DOCKER_IMAGE:?err}
     container_name: streamlit_app
+    hostname: streamlit
     restart: always
     networks:
       - internal
@@ -34,12 +35,22 @@ services:
 
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.alchemiscale-client-API.rule=Host(`${HOST_DOMAIN:?err}`)"
-      - "traefik.http.routers.alchemiscale-client-API.entrypoints=websecure"
-      - "traefik.http.routers.alchemiscale-client-API.tls.certresolver=myresolver"
-      - "traefik.docker.network=alchemiscale-server_internal"
+      - "traefik.http.routers.streamlit_service.rule=Host(`${HOST_DOMAIN:?err}`)"
+      - "traefik.http.routers.streamlit_service.entrypoints=websecure"
+      - "traefik.http.routers.streamlit_service.tls.certresolver=myresolver"
+      - "traefik.docker.network=asap-ml-streamlit_internal"
+      - "traefik.http.middlewares.mywwwredirect.redirectregex.regex=^https://www\.(.*)"
+      - "traefik.http.middlewares.mywwwredirect.redirectregex.replacement=https://$${1}"
+      - "traefik.http.routers.mywhoami.middlewares=mywwwredirect"
+      - "traefik.http.routers.streamlit_route.entrypoints=websecure"
+      - "traefik.http.routers.streamlit_route.rule=Host(`${HOST_DOMAIN:?err}`)"
+      - "traefik.http.routers.streamlit_route.tls.certresolver=myresolver"
+      - "traefik.http.services.streamlit_service.loadbalancer.server.url=http://streamlit_app:8501"
+      - "traefik.http.middlewares.csrf.headers.hostsproxyheaders=X-CSRFToken"
+      - "traefik.http.routers.streamlit_service.middlewares=csrf"
+
   
- reverse-proxy:
+  reverse-proxy:
     # The official v2 Traefik docker image
     image: traefik:v2.9
     networks:
