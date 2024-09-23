@@ -1,7 +1,9 @@
 version: '3'
 
-volumes:
-  production_traefik: {}
+networks:
+  internal:
+  web:
+
 
 services:
   streamlit:
@@ -9,6 +11,8 @@ services:
     image: ${STREAMLIT_DOCKER_IMAGE:?err}
     container_name: streamlit_app
     restart: always
+    networks:
+      - internal
     ports:
       - "8501:8501"
     healthcheck:
@@ -26,16 +30,38 @@ services:
         target: /home/mambauser/.streamlit/secrets.toml
     env_file:
       - .env
-  
-  traefik:
-    build:
-      context: .
-      dockerfile: ./Dockerfile.traefik
-    image: traefik_production
-    volumes:
-      - production_traefik:/etc/traefik/acme:z
-      - /var/run/docker.sock:/var/run/docker.sock
 
+
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.alchemiscale-client-API.rule=Host(`${HOST_DOMAIN:?err}`)"
+      - "traefik.http.routers.alchemiscale-client-API.entrypoints=websecure"
+      - "traefik.http.routers.alchemiscale-client-API.tls.certresolver=myresolver"
+      - "traefik.docker.network=alchemiscale-server_internal"
+  
+ reverse-proxy:
+    # The official v2 Traefik docker image
+    image: traefik:v2.9
+    networks:
+      - internal
+      - web
+    depends_on:
+      - streamlit
+    restart: unless-stopped
+    command: 
+      - "--log.level=DEBUG"
+      - "--providers.docker"
+      # Do not expose containers unless explicitly told so
+      - "--providers.docker.exposedbydefault=false"
+      - "--providers.docker.network=internal"
+      - "--entrypoints.websecure.address=:443"
+      - "--certificatesresolvers.myresolver.acme.tlschallenge=true"
+      - "--certificatesresolvers.myresolver.acme.caserver=https://acme-staging-v02.api.letsencrypt.org/directory"
+      - "--certificatesresolvers.myresolver.acme.email=${ACME_EMAIL}"
+      - "--certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json"
     ports:
-      - "0.0.0.0:81:81"
-      - "0.0.0.0:443:443"
+      - "443:443"
+    volumes:
+      # So that Traefik can listen to the Docker events
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./letsencrypt:/letsencrypt
