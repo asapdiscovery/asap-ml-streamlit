@@ -9,20 +9,11 @@ dependencies:
   - python <3.11
   - pip
 
-  # Testing
-  - pytest
-  - pytest-cov
-  - codecov
-
-
-  # falcbot
-  - slack-bolt
+  - rdkit
   - pydantic<2.0a0
   - biopython
   - schedule
-
-  # llm 
-  - llama-index
+  - openeye-toolkits
 
 
   # ml
@@ -40,7 +31,6 @@ dependencies:
   - mtenn >=0.5.1
   - wandb
   - semver
-  - openeye-toolkits
 
   # other asapdiscovery deps
   - distributed
