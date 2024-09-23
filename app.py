@@ -5,7 +5,11 @@ from asapdiscovery.ml.inference import GATInference
 from asapdiscovery.ml.models import ASAPMLModelRegistry
 from rdkit import Chem
 from streamlit_ketcher import st_ketcher
+from io import StringIO
+import schedule
 
+# need to update the registry periodically
+schedule.every(4).hours.do(ASAPMLModelRegistry.update_registry)
 
 def _is_valid_smiles(smi):
     if smi is None or smi == "":
@@ -18,6 +22,13 @@ def _is_valid_smiles(smi):
             return True
     except:
         return False
+    
+def sdf_str_to_rdkit_mol(sdf):
+    from io import BytesIO
+    bio = BytesIO(sdf.encode())
+    suppl = Chem.ForwardSDMolSupplier(bio, removeHs=False)
+    mols = [mol for mol in suppl if mol is not None]
+    return mols
 
 
 @st.cache_data
@@ -29,8 +40,19 @@ def convert_df(df):
 # Set the title of the Streamlit app
 st.title('ASAPDiscovery Machine Learning')
 
-input = st.selectbox("How would you like to enter your input?", ["Upload a CSV file", "Draw a molecule", "Enter SMILES"])
+st.markdown("## Intro")
 
+st.markdown("The [ASAPDiscovery antiviral drug discovery consortium](https://asapdiscovery.org) has developed a series of machine learning models (primarily Graph Attention Networks (GATs)) to predict molecular properties based on our experimental data.")
+st.markdown("These models are trained on a variety of endpoints, including in-vitro activity, assayed LogD, and more \n Some models are specific to a target, while others are global models that predict properties across all targets.")
+st.markdown("This web app gives you easy API-less access to the models, I hope you find it useful!\n As scientists we should always be looking to get our models into people's hands as easily as possible.")
+st.markdown("These models are trained bi-weekly. The latest models are used for prediction where possible. Note that predictions are pre-alpha and are provided as is, we are still working very actively on improving and validating models.")
+
+st.markdown("## Select input")
+
+
+input = st.selectbox("How would you like to enter your input?", ["Upload a CSV file", "Draw a molecule", "Enter SMILES", "Upload an SDF file"])
+
+multismiles = False
 if input == "Draw a molecule":
     st.write("Draw a molecule")
     smiles = st_ketcher(None)
@@ -41,6 +63,7 @@ if input == "Draw a molecule":
         st.stop()
     smiles = [smiles]
     df = pd.DataFrame(smiles, columns=["SMILES"])
+    column = "SMILES"
     smiles_column = df["SMILES"]
 elif input == "Enter SMILES":
     st.write("Enter SMILES")
@@ -52,6 +75,7 @@ elif input == "Enter SMILES":
         st.stop()
     smiles = [smiles]
     df = pd.DataFrame(smiles, columns=["SMILES"])
+    column = "SMILES"
     smiles_column = df["SMILES"]
 elif input == "Upload a CSV file":
     st.write("Upload a CSV file")
@@ -66,7 +90,7 @@ elif input == "Upload a CSV file":
         st.stop()
     # Select a column from the DataFrame
     column = st.selectbox("Select a column of SMILES analyze", df.columns)
-
+    multismiles = True
     smiles_column = df[column]
 
     # check if the smiles are valid
@@ -76,7 +100,31 @@ elif input == "Upload a CSV file":
         st.stop()
     st.success("All SMILES strings are valid, proceeding with prediction", icon="✅")
 
+elif input == "Upload an SDF file":
+    st.write("Upload an SDF file")
+    # Create a file uploader for SDF files
+    uploaded_file = st.file_uploader("Choose a SDF file to upload your predictions to", type="sdf")
+    # read with rdkit
+    if uploaded_file is not None:
+        # To convert to a string based IO:
+        stringio = StringIO(uploaded_file.getvalue().decode("utf-8"))
+        # To read file as string:
+        string_data = stringio.read()
+        mols = sdf_str_to_rdkit_mol(string_data)
+        smiles = [Chem.MolToSmiles(m) for m in mols]
+        df = pd.DataFrame(smiles, columns=["SMILES"])
+            # st.error("Error reading the SDF file, please check the input", icon="🚨")
+            # st.stop()
+    else:
+        st.stop()
     
+    st.success("All SMILES strings are valid, proceeding with prediction", icon="✅")
+    column = "SMILES"
+    smiles_column = df["SMILES"]
+    multismiles = True
+
+st.markdown("## Select your model parameters")
+
 
 targets = ASAPMLModelRegistry.get_targets_with_models()
 # filter out None values
@@ -102,6 +150,8 @@ if model is None:
     st.stop()
     # retry with a different target or endpoint
 
+st.markdown("## Prediction time 🚀")
+
 
 st.write(f"Predicting {_target_str} {endpoint_value} using model {model.name}")
 # Create a GATInference object from the model
@@ -123,6 +173,25 @@ else:
 df["predictions"] = preds
 df["prediction_error"] = err
 
+# sort the dataframe by predictions
+df = df.sort_values(by="predictions", ascending=False)
+
+if multismiles:
+    # plot the predictions and errors
+    st.scatter_chart(df, x=column, y="predictions", color="prediction_error", use_container_width=True, x_label="SMILES", y_label=f"Predicted {_target_str} {endpoint_value} ")
+
+else:
+    # just print the prediction
+    preds = df["predictions"].values[0]
+    smiles = df["SMILES"].values[0]
+    if err:
+        err = df["prediction_error"].values[0]
+        errstr = f"± {err:.2f}"
+    else:
+        errstr = ""
+    
+    st.markdown("### 🕵️")
+    st.markdown(f"Predicted {_target_str} {endpoint_value} for {smiles} is {preds:.2f} {errstr} using model {infr.model_name}")
 
 # allow the user to download the predictions
 csv = convert_df(df)
