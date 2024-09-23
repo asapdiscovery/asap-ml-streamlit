@@ -17,5 +17,8 @@ services:
       - type: bind
         source: $HOME/.OpenEye/
         target: /home/mambauser/.OpenEye/
+      - type: bind
+        source: .streamlit/secrets.toml
+        target: /home/mambauser/.streamlit/secrets.toml
     env_file:
       - .env
