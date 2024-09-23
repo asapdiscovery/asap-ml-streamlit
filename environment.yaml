@@ -1,0 +1,61 @@
+name: falcbot
+channels:
+  - conda-forge
+  - openeye
+
+
+dependencies:
+  # Base depends
+  - python <3.11
+  - pip
+
+  # Testing
+  - pytest
+  - pytest-cov
+  - codecov
+
+
+  # falcbot
+  - slack-bolt
+  - pydantic<2.0a0
+  - biopython
+  - schedule
+
+  # llm 
+  - llama-index
+
+
+  # ml
+  - pytorch
+  - pytorch_geometric >=2.5.0
+  - pytorch_cluster
+  - pytorch_scatter
+  - pytorch_sparse
+  - numpy
+  - h5py
+  - e3nn
+  - dgl
+  - dgllife
+  - pooch
+  - mtenn >=0.5.1
+  - wandb
+  - semver
+  - openeye-toolkits
+
+  # other asapdiscovery deps
+  - distributed
+  - dask
+  - netifaces
+  - boto3
+  - pandas
+
+
+    # Pip-only installs
+  - pip:
+    - git+https://github.com/choderalab/asapdiscovery@main#egg=asapdiscovery-alchemy&subdirectory=asapdiscovery-alchemy
+    - git+https://github.com/choderalab/asapdiscovery@main#egg=asapdiscovery-data&subdirectory=asapdiscovery-data
+    - git+https://github.com/choderalab/asapdiscovery@main#egg=asapdiscovery-modeling&subdirectory=asapdiscovery-modeling
+    - git+https://github.com/choderalab/asapdiscovery@main#egg=asapdiscovery-docking&subdirectory=asapdiscovery-docking
+    - git+https://github.com/choderalab/asapdiscovery@main#egg=asapdiscovery-ml&subdirectory=asapdiscovery-ml
+
+
