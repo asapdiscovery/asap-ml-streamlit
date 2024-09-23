@@ -42,7 +42,7 @@ st.title('ASAPDiscovery Machine Learning')
 
 st.markdown("## Intro")
 
-st.markdown("The [ASAPDiscovery antiviral drug discovery consortium](https://asapdiscovery.org) has developed a series of machine learning models (primarily Graph Attention Networks (GATs)) to predict molecular properties based on our experimental data.")
+st.markdown("The [ASAPDiscovery antiviral drug discovery consortium](https://asapdiscovery.org) has developed a series of machine learning models (primarily Graph Attention Networks (GATs)) to predict molecular properties based on our experimental data, much of which is [available](https://asapdiscovery.org/outputs/) as part of our [open science](https://asapdiscovery.org/open-science/) and public disclosure policy.")
 st.markdown("These models are trained on a variety of endpoints, including in-vitro activity, assayed LogD, and more \n Some models are specific to a target, while others are global models that predict properties across all targets.")
 st.markdown("This web app gives you easy API-less access to the models, I hope you find it useful!\n As scientists we should always be looking to get our models into people's hands as easily as possible.")
 st.markdown("These models are trained bi-weekly. The latest models are used for prediction where possible. Note that predictions are pre-alpha and are provided as is, we are still working very actively on improving and validating models.")
