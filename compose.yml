@@ -6,7 +6,13 @@ services:
     build: .
     container_name: "asap-ml-streamlit"
     ports:
-      - 80:80
+      - "8501:8501"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8501"]
+      interval: 1m30s
+      timeout: 10s
+      retries: 3
+
     volumes:
       - type: bind
         source: $HOME/.OpenEye/
