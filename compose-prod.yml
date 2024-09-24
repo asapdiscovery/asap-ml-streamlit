@@ -9,8 +9,8 @@ services:
     image: ${STREAMLIT_DOCKER_IMAGE:?err}
     container_name: streamlit_app
     restart: always
-    ports:
-      - "8501:8501"
+    expose:
+      - "8501"
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8501"]
       interval: 1m30s
