@@ -80,7 +80,7 @@ st.markdown(
     "These models are trained bi-weekly. The latest models are used for prediction where possible. Note that predictions are pre-alpha and are provided as is, work is on-going on improving and validating these models. As a general rule of thumb, predictions on your data will be better when your query compound(s) is/are closer chemically to the compounds in the CDD. Are you having problems using this UI or do you have a feature request? Please open an issue on [our issue tracker](https://github.com/asapdiscovery/asap-ml-streamlit/issues/new)."
 )
 
-st.markdown("## Select input")
+st.markdown("## Input :clipboard:")
 
 
 input = st.selectbox(
@@ -160,7 +160,7 @@ elif input == "Upload an SDF file":
     smiles_column = df["SMILES"]
     multismiles = True
 
-st.markdown("## Select your model parameters")
+st.markdown("## Model parameters :nut_and_bolt:")
 
 
 targets = ASAPMLModelRegistry.get_targets_with_models()
@@ -192,12 +192,14 @@ if model is None:
 st.markdown("## Prediction 🚀")
 
 
-st.write(f"Predicting **{_target_str} {endpoint_value}** using model:\n\n {model.name}")
+st.write(
+    f"Predicting **{_target_str} {endpoint_value}** using model:\n\n `{model.name}`"
+)
 # Create a GATInference object from the model
 infr = GATInference.from_ml_model_spec(model)
 if infr.is_ensemble:
     st.write(
-        f"_Using ensemble model (n={len(model.models)}), will estimate uncertainty using ensemble variance._"
+        f"_Using ensemble model (n={len(model.models)}); estimating uncertainty as variance of predictions._"
     )
 # Predict the property value for each SMILES string
 predictions = [
