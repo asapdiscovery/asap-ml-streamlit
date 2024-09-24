@@ -24,6 +24,7 @@ import pandas as pd
 import numpy as np
 from asapdiscovery.ml.inference import GATInference
 from asapdiscovery.ml.models import ASAPMLModelRegistry
+import matplotlib.pyplot as plt
 from rdkit import Chem
 from streamlit_ketcher import st_ketcher
 from io import StringIO
@@ -92,9 +93,9 @@ multismiles = False
 if input == "Draw a molecule":
     smiles = st_ketcher(None)
     if _is_valid_smiles(smiles):
-        st.success("Valid SMILES string", icon="✅")
+        st.success("Valid molecule", icon="✅")
     else:
-        st.error("Invalid SMILES string", icon="🚨")
+        st.error("Invalid molecule", icon="🚨")
         st.stop()
     smiles = [smiles]
     df = pd.DataFrame(smiles, columns=["SMILES"])
@@ -134,7 +135,10 @@ elif input == "Upload a CSV file":
             "Some of the SMILES strings are invalid, please check the input", icon="🚨"
         )
         st.stop()
-    st.success("All SMILES strings are valid, proceeding with prediction", icon="✅")
+    st.success(
+        f"All SMILES strings are valid (n={len(valid_smiles)}), proceeding with prediction",
+        icon="✅",
+    )
 
 elif input == "Upload an SDF file":
     # Create a file uploader for SDF files
@@ -155,7 +159,10 @@ elif input == "Upload an SDF file":
     else:
         st.stop()
 
-    st.success("All SMILES strings are valid, proceeding with prediction", icon="✅")
+    st.success(
+        f"All molecule entries are valid (n={len(df)}), proceeding with prediction",
+        icon="✅",
+    )
     column = "SMILES"
     smiles_column = df["SMILES"]
     multismiles = True
@@ -215,34 +222,86 @@ else:
     err = predictions[:, 1]  # rejoin with the original dataframe
 
 
-df["predictions"] = preds
-df["prediction_error"] = err
+pred_column_name = f"{_target_str}_computed-{endpoint_value}"
+unc_column_name = f"{_target_str}_computed-{endpoint_value}_uncertainty"
+df[pred_column_name] = preds
+df[unc_column_name] = err
 
-# sort the dataframe by predictions
-df = df.sort_values(by="predictions", ascending=False)
-
+st.markdown("---")
 if multismiles:
     # plot the predictions and errors
-    st.scatter_chart(
-        df,
-        x=column,
-        y="predictions",
-        color="prediction_error",
-        use_container_width=True,
-        x_label="SMILES",
-        y_label=f"Predicted {_target_str} {endpoint_value} ",
-    )
+    # Histogram first
+    fig, ax = plt.subplots()
+
+    sorted_df = df.sort_values(by=pred_column_name)
+    n_bins = int(len(sorted_df[pred_column_name]) / 10)
+    if n_bins < 5:  # makes the histogram slightly more interpretable with low data
+        n_bins = 5
+
+    ax.hist(sorted_df[pred_column_name], bins=n_bins)
+
+    ax.set_ylabel("Count")
+    ax.set_xlabel(f"Computed {endpoint_value}")
+    ax.set_title(f"Histogram of computed {endpoint_value} for target: {_target_str}")
+
+    st.pyplot(fig)
+
+    # then a barplot
+    fig, ax = plt.subplots()
+
+    ax.bar(range(len(sorted_df)), sorted_df[pred_column_name])
+
+    ax.set_xticks([])
+    ax.set_xlabel(f"Query compounds")
+    ax.set_ylabel(f"Computed {endpoint_value}")
+
+    ax.set_title(f"Barplot of computed {endpoint_value} for target: {_target_str}")
+
+    st.pyplot(fig)
+
+    if endpoint_value == "pIC50":
+        from rdkit.Chem.Descriptors import MolWt
+        import seaborn as sns
+
+        # then a scatterplot of uncertainty vs MW
+        df["MW"] = [MolWt(Chem.MolFromSmiles(smi)) for smi in sorted_df["SMILES"]]
+        fig, ax = plt.subplots()
+
+        ax = sns.scatterplot(
+            x="MW", y=pred_column_name, hue=unc_column_name, palette="coolwarm", data=df
+        )
+
+        norm = plt.Normalize(df[unc_column_name].min(), df[unc_column_name].max())
+        sm = plt.cm.ScalarMappable(cmap="coolwarm", norm=norm)
+        sm.set_array([])
+
+        # Remove the legend and add a colorbar
+        ax.get_legend().remove()
+        cbar = ax.figure.colorbar(sm, ax=ax)
+        ax.annotate(
+            f"Computed {endpoint_value} uncertainty",
+            xy=(1.2, 0.3),
+            xycoords="axes fraction",
+            rotation=270,
+        )
+
+        ax.set_title(
+            f"Scatterplot of predicted {endpoint_value} versus MW\ntarget: {_target_str}"
+        )
+        ax.set_xlabel(f"Molecular weight (Da)")
+        ax.set_ylabel(f"Computed {endpoint_value}")
+        st.pyplot(fig)
+
 else:
     # just print the prediction
-    preds = df["predictions"].values[0]
+    preds = df[pred_column_name].values[0]
     smiles = df["SMILES"].values[0]
     if err:
-        err = df["prediction_error"].values[0]
+        err = df[unc_column_name].values[0]
         errstr = f"± {err:.2f}"
     else:
         errstr = ""
 
-    st.markdown("---")
     st.markdown(
         f"Predicted {_target_str} {endpoint_value} for {smiles} is {preds:.2f} {errstr}."
     )
