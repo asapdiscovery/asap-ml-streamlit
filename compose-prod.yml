@@ -59,7 +59,6 @@ services:
       - "--providers.docker.network=internal"
       - "--entrypoints.websecure.address=:443"
       - "--certificatesresolvers.myresolver.acme.tlschallenge=true"
-      - "--certificatesresolvers.myresolver.acme.caserver=https://acme-staging-v02.api.letsencrypt.org/directory"
       - "--certificatesresolvers.myresolver.acme.email=${ACME_EMAIL}"
       - "--certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json"
     ports:
