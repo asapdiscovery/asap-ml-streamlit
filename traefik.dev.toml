@@ -17,4 +17,4 @@ level = "DEBUG"
 # containers are not discovered automatically
 [providers]
   [providers.docker]
-    exposedByDefault = false
+    exposedByDefault = true
