@@ -6,7 +6,7 @@ networks:
 
 
 services:
-  streamlit_service:
+  streamlit:
     command: streamlit run app.py
     image: ${STREAMLIT_DOCKER_IMAGE:?err}
     container_name: streamlit_app
@@ -16,32 +16,24 @@ services:
       - internal
     ports:
       - "8501:8501"
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8501"]
-      interval: 1m30s
-      timeout: 10s
-      retries: 3
 
     volumes:
       - type: bind
         source: $HOME/.OpenEye/
         target: /home/mambauser/.OpenEye/
       - type: bind
-        source: .streamlit/secrets.toml
-        target: /home/mambauser/.streamlit/secrets.toml
+        source: .streamlit/
+        target: /home/mambauser/.streamlit/
     env_file:
       - .env
 
 
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.streamlit_service.rule=Host(`${HOST_DOMAIN:?err}`)"
-      - "traefik.http.routers.streamlit_service.entrypoints=websecure"
-      - "traefik.http.routers.streamlit_service.tls.certresolver=myresolver"
+      - "traefik.http.routers.streamlit.rule=Host(`${HOST_DOMAIN:?err}`)"
+      - "traefik.http.routers.streamlit.entrypoints=websecure"
+      - "traefik.http.routers.streamlit.tls.certresolver=myresolver"
       - "traefik.docker.network=asap-ml-streamlit_internal"
-      - "traefik.http.middlewares.mywwwredirect.redirectregex.regex=^https://www\.(.*)"
-      - "traefik.http.middlewares.mywwwredirect.redirectregex.replacement=https://$${1}"
-      - "traefik.http.routers.mywhoami.middlewares=mywwwredirect"
       - "traefik.http.routers.streamlit_route.entrypoints=websecure"
       - "traefik.http.routers.streamlit_route.rule=Host(`${HOST_DOMAIN:?err}`)"
       - "traefik.http.routers.streamlit_route.tls.certresolver=myresolver"
