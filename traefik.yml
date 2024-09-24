@@ -4,7 +4,7 @@ log:
 entryPoints:
   web:
     # http
-    address: ":81"
+    address: ":80"
     http:
       # https://docs.traefik.io/routing/entrypoints/#entrypoint
       redirections:

@@ -17,7 +17,9 @@ services:
       - type: bind
         source: $HOME/.OpenEye/
         target: /home/mambauser/.OpenEye/
-
+      - type: bind
+        source: .streamlit/
+        target: /home/mambauser/.streamlit/
 
   traefik: 
     image: traefik:latest
