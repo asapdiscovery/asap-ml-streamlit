@@ -1,41 +1,75 @@
 version: '3'
 
-volumes:
-  production_traefik: {}
+networks:
+  internal:
+  web:
+
 
 services:
   streamlit:
     command: streamlit run app.py
     image: ${STREAMLIT_DOCKER_IMAGE:?err}
     container_name: streamlit_app
+    hostname: streamlit
     restart: always
+    networks:
+      - internal
     ports:
       - "8501:8501"
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8501"]
-      interval: 1m30s
-      timeout: 10s
-      retries: 3
 
     volumes:
       - type: bind
         source: $HOME/.OpenEye/
         target: /home/mambauser/.OpenEye/
       - type: bind
-        source: .streamlit/secrets.toml
-        target: /home/mambauser/.streamlit/secrets.toml
+        source: .streamlit/
+        target: /home/mambauser/.streamlit/
     env_file:
       - .env
-  
-  traefik:
-    build:
-      context: .
-      dockerfile: ./Dockerfile.traefik
-    image: traefik_production
-    volumes:
-      - production_traefik:/etc/traefik/acme:z
-      - /var/run/docker.sock:/var/run/docker.sock
 
+
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.streamlit.rule=Host(`${HOST_DOMAIN:?err}`)"
+      - "traefik.http.routers.streamlit.entrypoints=websecure"
+      - "traefik.http.routers.streamlit.tls.certresolver=myresolver"
+      - "traefik.docker.network=asap-ml-streamlit_internal"
+      - "traefik.http.routers.streamlit_route.entrypoints=websecure"
+      - "traefik.http.routers.streamlit_route.rule=Host(`${HOST_DOMAIN:?err}`)"
+      - "traefik.http.routers.streamlit_route.tls.certresolver=myresolver"
+      - "traefik.http.services.streamlit_service.loadbalancer.server.url=http://streamlit_app:8501"
+      - "traefik.http.middlewares.csrf.headers.hostsproxyheaders=X-CSRFToken"
+      - "traefik.http.routers.streamlit_service.middlewares=csrf"
+
+  
+  reverse-proxy:
+    # The official v2 Traefik docker image
+    image: traefik:v2.9
+    networks:
+      - internal
+      - web
+    depends_on:
+      - streamlit
+    restart: unless-stopped
+    command: 
+      - "--log.level=DEBUG"
+      - "--providers.docker"
+      # Do not expose containers unless explicitly told so
+      - "--providers.docker.exposedbydefault=false"
+      - "--providers.docker.network=internal"
+      - "--certificatesresolvers.myresolver.acme.tlschallenge=true"
+      - "--certificatesresolvers.myresolver.acme.email=${ACME_EMAIL}"
+      - "--certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json"
+      # http to https redirect
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.web.http.redirections.entryPoint.to=websecure"
+      - "--entrypoints.web.http.redirections.entryPoint.scheme=https"
+      - "--entrypoints.web.http.redirections.entrypoint.permanent=true"
+      - "--entrypoints.websecure.address=:443"
     ports:
-      - "0.0.0.0:81:81"
-      - "0.0.0.0:443:443"
+      - "443:443"
+      - "80:80"
+    volumes:
+      # So that Traefik can listen to the Docker events
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./letsencrypt:/letsencrypt
