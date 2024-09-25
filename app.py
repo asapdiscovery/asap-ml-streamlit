@@ -124,7 +124,7 @@ elif input == "Upload a CSV file":
     else:
         st.stop()
     # Select a column from the DataFrame
-    column = st.selectbox("Select a column of SMILES analyze", df.columns)
+    column = st.selectbox("Select a SMILES column", df.columns)
     multismiles = True
     smiles_column = df[column]
 
