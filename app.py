@@ -99,8 +99,8 @@ if input == "Draw a molecule":
         st.stop()
     smiles = [smiles]
     df = pd.DataFrame(smiles, columns=["SMILES"])
-    column = "SMILES"
-    smiles_column = df["SMILES"]
+    smiles_column_name = "SMILES"
+    smiles_column = df[smiles_column_name]
 elif input == "Enter SMILES":
     smiles = st.text_input("Enter a SMILES string")
     if _is_valid_smiles(smiles):
@@ -110,8 +110,8 @@ elif input == "Enter SMILES":
         st.stop()
     smiles = [smiles]
     df = pd.DataFrame(smiles, columns=["SMILES"])
-    column = "SMILES"
-    smiles_column = df["SMILES"]
+    smiles_column_name = "SMILES"
+    smiles_column = df[smiles_column_name]
 elif input == "Upload a CSV file":
     # Create a file uploader for CSV files
     uploaded_file = st.file_uploader(
@@ -124,9 +124,9 @@ elif input == "Upload a CSV file":
     else:
         st.stop()
     # Select a column from the DataFrame
-    column = st.selectbox("Select a SMILES column", df.columns)
+    smiles_column_name = st.selectbox("Select a SMILES column", df.columns)
     multismiles = True
-    smiles_column = df[column]
+    smiles_column = df[smiles_column_name]
 
     # check if the smiles are valid
     valid_smiles = [_is_valid_smiles(smi) for smi in smiles_column]
@@ -163,8 +163,8 @@ elif input == "Upload an SDF file":
         f"All molecule entries are valid (n={len(df)}), proceeding with prediction",
         icon="✅",
     )
-    column = "SMILES"
-    smiles_column = df["SMILES"]
+    smiles_column_name = "SMILES"
+    smiles_column = df[smiles_column_name]
     multismiles = True
 
 st.markdown("## Model parameters :nut_and_bolt:")
@@ -264,7 +264,9 @@ if multismiles:
         import seaborn as sns
 
         # then a scatterplot of uncertainty vs MW
-        df["MW"] = [MolWt(Chem.MolFromSmiles(smi)) for smi in sorted_df["SMILES"]]
+        df["MW"] = [
+            MolWt(Chem.MolFromSmiles(smi)) for smi in sorted_df[smiles_column_name]
+        ]
         fig, ax = plt.subplots()
 
         ax = sns.scatterplot(
