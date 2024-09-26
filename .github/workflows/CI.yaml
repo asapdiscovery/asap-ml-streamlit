@@ -1,0 +1,64 @@
+name: CI
+
+on:
+  # GitHub has started calling new repo's first branch "main" https://github.com/github/renaming
+  # The cookiecutter uses the "--initial-branch" flag when it runs git-init
+  push:
+    branches:
+      - "main"
+  pull_request:
+    branches:
+      - "main"
+  schedule:
+    # Weekly tests run on main by default:
+    #   Scheduled workflows run on the latest commit on the default or base branch.
+    #   (from https://help.github.com/en/actions/reference/events-that-trigger-workflows#scheduled-events-schedule)
+    - cron: "0 0 * * 0"
+
+defaults:
+  run:
+    shell: bash -l {0}
+
+jobs:
+  test:
+    name: Test on ${{ matrix.os }}, Python ${{ matrix.python-version }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [macOS-latest, ubuntu-latest]
+        python-version: ["3.10", "3.11"]
+      fail-fast: false
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Additional info about the build
+        shell: bash
+        run: |
+          uname -a
+          df -h
+          ulimit -a
+
+      # More info on options: https://github.com/marketplace/actions/provision-with-micromamba
+    # More info on options: https://github.com/mamba-org/provision-with-micromamba
+      - name: Setup Conda Environment
+        uses: mamba-org/setup-micromamba@v1
+        with:
+          environment-file: environment.yml
+          environment-name: test
+          cache-environment: true
+          cache-downloads: true
+          cache-environment-key: environment-${{ steps.date.outputs.date }}
+          cache-downloads-key: downloads-${{ steps.date.outputs.date }}
+          create-args: >-
+            python==${{ matrix.python-version }}
+
+
+
+      - name: Run tests
+        # conda setup requires this special shell
+        shell: bash -l {0}
+        run: |
+          pytest -v --cov=choppa --cov-report=xml --color=yes tests/
+
+
