@@ -62,6 +62,7 @@ class TestDataframe(STTester):
         at.run(timeout=self.timeout)
         at.selectbox(key="input").select("Upload a CSV file").run(timeout=self.timeout)
         # cant be bother to mock testing internals to get this to work
+        # you can also possibly use selenium to do this but seems like a lot of work
         at.file_uploader(key="csv_file").upload(smiles_dataframe_data).run(timeout=self.timeout)
         at.selectbox(key="df_smiles_column").select("mySmiles").run(timeout=self.timeout)
         at.selectbox(key="target").select("SARS-CoV-2-Mpro").run(timeout=self.timeout)
