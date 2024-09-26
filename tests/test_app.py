@@ -30,7 +30,6 @@ def smiles_dataframe_data_csv(tmp_path, smiles_dataframe_data):
 
 
 
-
 class TestSMILES(STTester):
 
     @pytest.mark.parametrize("target", ["SARS-CoV-2-Mpro", "MERS-CoV-Mpro"])
@@ -56,14 +55,14 @@ class TestSMILES(STTester):
 
 class TestDataframe(STTester):
 
-    @pytest.mark.xfail(reason="No ability to mock file upload")
+    @pytest.mark.xfail(reason="No ability to mock file upload, see https://github.com/streamlit/streamlit/issues/8438")
     @pytest.mark.parametrize("target", ["SARS-CoV-2-Mpro", "MERS-CoV-Mpro"])
     @pytest.mark.parametrize("endpoint", ["pIC50", "LogD"])
     def test_dataframe(self, app_path, smiles_dataframe_data_csv, target, endpoint):
         at = AppTest.from_file(app_path)
         at.run(timeout=self.timeout)
         at.selectbox(key="input").select("Upload a CSV file").run(timeout=self.timeout)
-        element.send_keys("smiles_dataframe_data_csv")
+        # cant be bother to mock testing internals to get this to work
         at.file_uploader(key="csv_file").upload(smiles_dataframe_data).run(timeout=self.timeout)
         at.selectbox(key="df_smiles_column").select("mySmiles").run(timeout=self.timeout)
         at.selectbox(key="target").select("SARS-CoV-2-Mpro").run(timeout=self.timeout)
