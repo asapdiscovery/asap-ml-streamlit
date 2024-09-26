@@ -1,25 +1,5 @@
 import streamlit as st
 import os
-
-asap_prod_streamlit = int(os.getenv("ASAP_OE_PROD_STREAMLIT", None))
-
-if asap_prod_streamlit == 1:
-
-    def sort_out_openeye_license():
-        import os
-
-        # need to write the license file to disk
-        txt = st.secrets.openeye_credentials.license_file_txt
-        if not txt:
-            raise ValueError("No OpenEye license file found")
-        with open("oe_license.txt", "w") as f:
-            f.write(txt)
-        # set the license file environment variable
-        os.environ["OE_LICENSE"] = "oe_license.txt"
-
-    sort_out_openeye_license()
-
-
 import pandas as pd
 import numpy as np
 from asapdiscovery.ml.inference import GATInference
