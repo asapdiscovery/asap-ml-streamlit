@@ -38,6 +38,8 @@ dependencies:
   - boto3
   - pandas
 
+  - pytest
+
 
 
     # Pip-only installs
