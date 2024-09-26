@@ -58,7 +58,9 @@ jobs:
       - name: Run tests
         # conda setup requires this special shell
         shell: bash -l {0}
+        # important to cd into the tests directory because app path is hard coded
         run: |
-          pytest -v --color=yes ./tests/
+          cd tests
+          pytest -vvv --color=yes 
 
 
