@@ -1,7 +1,6 @@
 import pytest
 import pandas as pd
 from streamlit.testing.v1 import AppTest
-from selenium import webdriver
 
 class STTester:
     timeout = 500
