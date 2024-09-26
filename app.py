@@ -59,7 +59,7 @@ def sdf_str_to_rdkit_mol(sdf):
 @st.cache_data
 def convert_df(df):
     # IMPORTANT: Cache the conversion to prevent computation on every rerun
-    return queried_df.to_csv().encode("utf-8")
+    return df.to_csv().encode("utf-8")
 
 
 # Set the title of the Streamlit app
