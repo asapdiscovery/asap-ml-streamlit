@@ -6,3 +6,6 @@ oe_license.txt
 
 # .env file
 .env
+
+# __pycache__ folder
+__pycache__/
