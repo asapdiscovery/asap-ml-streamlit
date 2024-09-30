@@ -67,6 +67,7 @@ st.markdown("## Input :clipboard:")
 input = st.selectbox(
     "How would you like to enter your input?",
     ["Upload a CSV file", "Draw a molecule", "Enter SMILES", "Upload an SDF file"],
+    key="input",
 )
 
 multismiles = False
@@ -82,7 +83,7 @@ if input == "Draw a molecule":
     smiles_column_name = "SMILES"
     smiles_column = queried_df[smiles_column_name]
 elif input == "Enter SMILES":
-    smiles = st.text_input("Enter a SMILES string")
+    smiles = st.text_input("Enter a SMILES string", key="smiles_user_input")
     if _is_valid_smiles(smiles):
         st.success("Valid SMILES string", icon="✅")
     else:
@@ -95,7 +96,7 @@ elif input == "Enter SMILES":
 elif input == "Upload a CSV file":
     # Create a file uploader for CSV files
     uploaded_file = st.file_uploader(
-        "Choose a CSV file to upload your predictions to", type="csv"
+        "Choose a CSV file to upload your predictions to", type="csv", key="csv_file"
     )
 
     # If a file is uploaded, parse it into a DataFrame
@@ -104,7 +105,7 @@ elif input == "Upload a CSV file":
     else:
         st.stop()
     # Select a column from the DataFrame
-    smiles_column_name = st.selectbox("Select a SMILES column", queried_df.columns)
+    smiles_column_name = st.selectbox("Select a SMILES column", queried_df.columns, key="df_smiles_column")
     multismiles = True
     smiles_column = queried_df[smiles_column_name]
 
@@ -128,15 +129,18 @@ elif input == "Upload an SDF file":
     # read with rdkit
     if uploaded_file is not None:
         # To convert to a string based IO:
-        stringio = StringIO(uploaded_file.getvalue().decode("utf-8"))
-        # To read file as string:
-        string_data = stringio.read()
-        mols = sdf_str_to_rdkit_mol(string_data)
-        smiles = [Chem.MolToSmiles(m) for m in mols]
-        queried_df = pd.DataFrame(smiles, columns=["SMILES"])
-        # st.error("Error reading the SDF file, please check the input", icon="🚨")
-        # st.stop()
+        try:
+            stringio = StringIO(uploaded_file.getvalue().decode("utf-8"))
+            # To read file as string:
+            string_data = stringio.read()
+            mols = sdf_str_to_rdkit_mol(string_data)
+            smiles = [Chem.MolToSmiles(m) for m in mols]
+            queried_df = pd.DataFrame(smiles, columns=["SMILES"])
+        except:
+            st.error("Error reading the SDF file, please check the input", icon="🚨")
+            st.stop()
     else:
+        st.error("No file uploaded", icon="🚨")
         st.stop()
 
     st.success(
@@ -154,11 +158,11 @@ targets = ASAPMLModelRegistry.get_targets_with_models()
 # filter out None values
 targets = [t for t in targets if t is not None]
 # Select a target value from the preset list
-target_value = st.selectbox("Select a biological target ", targets)
+target_value = st.selectbox("Select a biological target ", targets, key="target")
 # endpoints
 endpoints = ASAPMLModelRegistry.get_endpoints()
 # Select a target value from the preset list
-endpoint_value = st.selectbox("Select a property ", endpoints)
+endpoint_value = st.selectbox("Select a property ", endpoints, key="endpoint")
 
 if not ASAPMLModelRegistry.endpoint_has_target(endpoint_value):
     _target = None

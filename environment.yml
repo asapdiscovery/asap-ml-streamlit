@@ -1,3 +1,5 @@
+name: asap-ml-streamlit
+
 channels:
   - conda-forge
   - openeye
@@ -14,7 +16,6 @@ dependencies:
   - biopython
   - schedule
   - openeye-toolkits
-  - asapdiscovery
 
   # ml
   - pytorch
@@ -38,6 +39,8 @@ dependencies:
   - netifaces
   - boto3
   - pandas
+
+  - pytest
 
 
 
