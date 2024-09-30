@@ -58,16 +58,8 @@ jobs:
             python==${{ matrix.python-version }}
 
 
-      - name: Setup Conda Environment
-        uses: streamlit/streamlit-app-action@v0.0.3
-        with:
-          app-path: app.py
-          pytest-args: -v --junit-xml=test-results.xml
-      
-      - if: always()
-        uses: pmeier/pytest-results-action@v0.6.0
-        with:
-          path: test-results.xml
-          summary: true
-          display-options: fEX
+      - name: Run tests
+        run: |
+          pytest -n 0 -v --color=yes test_app.py
+
 

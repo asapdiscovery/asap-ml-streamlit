@@ -34,7 +34,7 @@ class TestSMILES(STTester):
 
     @pytest.mark.parametrize("target", ["SARS-CoV-2-Mpro", "MERS-CoV-Mpro"])
     @pytest.mark.parametrize("endpoint", ["pIC50", "LogD"])
-    def test_smiles(self, app_path, endpoint, target):
+    def test_smiles(self, app_path, endpoint, target, tmp_path):
         at = AppTest.from_file(app_path)
         at.run(timeout=self.timeout)
         at.selectbox(key="input").select("Enter SMILES").run(timeout=self.timeout)
@@ -58,7 +58,7 @@ class TestDataframe(STTester):
     @pytest.mark.xfail(reason="No ability to mock file upload, see https://github.com/streamlit/streamlit/issues/8438")
     @pytest.mark.parametrize("target", ["SARS-CoV-2-Mpro", "MERS-CoV-Mpro"])
     @pytest.mark.parametrize("endpoint", ["pIC50", "LogD"])
-    def test_dataframe(self, app_path, smiles_dataframe_data_csv, target, endpoint):
+    def test_dataframe(self, app_path, smiles_dataframe_data_csv, target, endpoint, tmp_path):
         at = AppTest.from_file(app_path)
         at.run(timeout=self.timeout)
         at.selectbox(key="input").select("Upload a CSV file").run(timeout=self.timeout)
