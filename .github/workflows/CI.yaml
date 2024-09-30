@@ -60,6 +60,6 @@ jobs:
 
       - name: Run tests
         run: |
-          pytest -v --color=yes test_app.py
+          pytest -vvv --color=yes test_app.py
 
 
