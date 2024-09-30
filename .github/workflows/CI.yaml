@@ -54,13 +54,17 @@ jobs:
             python==${{ matrix.python-version }}
 
 
+      - name: run tests
+      - uses: streamlit/streamlit-app-action@v0.0.3
+        with:
+          app-path: app.py
+          ruff: true
 
-      - name: Run tests
-        # conda setup requires this special shell
-        shell: bash -l {0}
-        # important to cd into the tests directory because app path is hard coded
-        run: |
-          cd tests
-          pytest -vvv --color=yes 
+      - if: always()
+        uses: pmeier/pytest-results-action@v0.6.0
+        with:
+          path: test-results.xml
+          summary: true
+          display-options: fEX
 
 
