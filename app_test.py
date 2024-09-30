@@ -8,7 +8,8 @@ class STTester:
 
 @pytest.fixture()
 def app_path():
-    return "../app.py"
+    # retirn
+    return "./app.py"
 
 @pytest.fixture()
 def smiles_dataframe_data():
