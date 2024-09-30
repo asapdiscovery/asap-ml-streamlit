@@ -1,3 +1,5 @@
+name: asap-ml-streamlit
+
 channels:
   - conda-forge
   - openeye
