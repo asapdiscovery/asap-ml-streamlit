@@ -205,6 +205,16 @@ else:
     preds = predictions[:, 0]
     err = predictions[:, 1]  # rejoin with the original dataframe
 
+# check if the model has a plot prepared
+plot_url = model.pull_plot("test_performance.png", return_as="url")
+
+if plot_url:
+    # we are showing the latest test set performance plot
+    st.markdown("### Model test set performance")
+    st.markdown(
+        f"Below is the latest test set performance plot for the model `{model.name}`."
+    )
+    st.image(plot_url)
 
 pred_column_name = f"{_target_str}_computed-{endpoint_value}"
 unc_column_name = f"{_target_str}_computed-{endpoint_value}_uncertainty"
