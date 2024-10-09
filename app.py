@@ -206,8 +206,11 @@ else:
     err = predictions[:, 1]  # rejoin with the original dataframe
 
 # check if the model has a plot prepared
-plot_url = model.pull_plot("test_performance.png", return_as="url")
-
+try:
+    plot_url = model.pull_plot("test_performance.png", return_as="url")
+except:
+    plot_url = None
+    
 if plot_url:
     # we are showing the latest test set performance plot
     st.markdown("### Model test set performance")
